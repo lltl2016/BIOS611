@@ -1,0 +1,51 @@
+---
+title: "Reproduce me"
+author: "Lang Li"
+date: "August 27, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Linear Regression
+
+## Assumptions
+
+Standard analysis of linear regression is based on the following four assumptions:
+
+1. Linear relation with fixed regressors
+
+2. Independence
+
+3. Constant variance
+
+4. Mean zero error
+
+These assumptions can be succinctly written as: $Yi=X^{T}_{i} β+ϵ_i$, $ϵ_i∼iidD(0,2)$.
+
+
+# Example
+
+Using `mtcars` dataset, we fit a linear regression in `R`.
+
+```{r}
+out = lm(mpg ~ disp + wt, data = mtcars)
+```
+
+```{r,echo=FALSE}
+library(knitr)
+kable(summary(out)$coef,digits = 2, caption = "Regression table")
+```
+
+The variable `wt` has statistically significant association with `mpg`.
+
+Next, we present the residual plot.
+
+```{r, echo=FALSE}
+plot(out, which = 1)
+```
+
+residual plot
+

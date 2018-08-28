@@ -48,4 +48,5 @@ plot(out, which = 1)
 ```
 
 residual plot
-
+ aloha
+ 

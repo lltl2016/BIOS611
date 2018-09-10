@@ -1,0 +1,39 @@
+---
+title: "Lab2"
+author: "Lang Li"
+date: "September 10, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Read in the data
+```{r}
+library(tidyverse)
+fev <- read_csv("fev.csv")
+fevRaw <-read.csv("fevRaw.csv")
+```
+
+
+```{r}
+fev1 = fev %>%
+  group_by(id) %>%
+  mutate(time = age - min(age)) 
+ggplot(fev1,aes(x = time, y = logfev1)) +
+  geom_line()
+```
+
+2. 
+```{r}
+options(digits = 3)
+fev2 = fev1 %>%
+  group_by(id) %>%
+  mutate(basehgt = min(ht))%>%
+  mutate(baseage = min(age)) %>%
+  select(id,logfev1,baseage,basehgt,time) %>%
+  filter(baseage < 7 | basehgt <1.2)
+```
+
+3. 

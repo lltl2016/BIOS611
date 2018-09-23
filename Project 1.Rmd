@@ -1,0 +1,209 @@
+---
+title: "Project 1"
+author: "Lang Li"
+date: "September 10, 2018"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+```
+
+# 1. Seatbelts
+
+After carefully selecting the dataset, I first choose to use the dataset `Seatbelts`. 
+
+##Read data into R
+
+Since the original dataset is a time series data object, we want to convert it into a data frame:
+```{r}
+Seatbelts = as.data.frame(Seatbelts)
+
+## The code below transform the law variable into a factor named "before" and "after" 
+for (i in 1:nrow(Seatbelts)){
+  if (Seatbelts$law[i] == 0){
+    Seatbelts$law[i] = "Before"
+  }else{
+    Seatbelts$law[i] = "After"
+  }
+}
+```
+
+##Produce a figure
+
+Mainly, we are curious on how the implementation of the seat belts law affects the casualties. Here, we treat law as a factor instead of a continuous variable:
+
+```{r}
+ggplot(Seatbelts,mapping = aes(x = as.factor(law),y = DriversKilled))+
+  geom_boxplot()+
+  xlab("Law Implementation Staus")+
+  ylab("Drivers Killed")+
+  ggtitle("Number of Drivers Killed Before and After the Seat Belts Law Implementation")
+```
+
+
+##Use functions to filter and summarize your data sets
+
+We are exploring the mean number of drivers killed before the implementation of the law:
+```{r}
+before_law = Seatbelts %>%
+  filter(law == "Before")
+
+after_law = Seatbelts %>%
+  filter(law == "After")
+
+mean(Seatbelts$DriversKilled) #Mean number of drivers killed 
+mean(before_law$DriversKilled) #Mean number of drivers killed before the implementation of the law
+mean(after_law$DriversKilled) #Mean number of drivers killed after the implementation of the law
+```
+
+
+##Communicate results
+
+This figure was derived from the dataset `Seatbelts`, which came from the 1986 journal "The effects of seat belt legislation on British road casualties: A case study in structural time series modelling".It is a case study on the monthly totals of car drivers in Great Britain killed or seriously injured Jan 1969 to Dec 1984, while the compulsory wearing of seat belts was introduced on 31 Jan 1983. The mean number for the drivers killed is 123, while before the law implemented, it was 126 and after the implementation, it dropped to 100. The boxplot above shows that the mean of number of drivers killed after the implementation of the law is significantly less than the number before. The central line in the box plot is the median (50th percentile of the data points). We can clearly see that the median is also significant lower, meaning that in most months, the casualties are much lower than those months before the law implementation. 
+
+As a next step, we want to explore the relationship between the law implementation and the drivers serious injured to further see if the implementation of the law greatly reduce the occurance of serious traffic accident.
+
+
+
+
+# 2. chickwts
+
+The second dataset I am choosing is `chickwts`. 
+
+## Read data into R
+```{r}
+data(chickwts)
+```
+
+## Produce a figure
+We want to explore the relationship between weights and feed. So we create the boxplot:
+```{r}
+ggplot(chickwts,aes(x = feed, y = weight)) +
+  geom_boxplot()+
+  ggtitle("Relationship between Weight and Feeds for the Chicken")
+```
+
+
+## Use functions to filter and summerize your dataset
+
+In order to assess the quality of the feed, we want to set a threshold and determine the good or bad of a product. The threshold here is 250 for the weight. 
+```{r}
+#Count observations for each feed type
+tot_count <- chickwts %>%
+  group_by(feed) %>%
+  summarise(tot = n())
+
+#Set a threshold of 250, and filter it and count again. Join the two tables
+good_feed <- chickwts %>%
+  filter(weight > 250) %>%
+  group_by(feed) %>%
+  summarise(good = n()) %>%
+  right_join(tot_count)
+
+#Set NA to 0, 2 digit option and calculate the 'good rate' for each feed.
+good_feed$good[is.na(good_feed$good)] <- 0
+options(digits = 3)
+good_feed %>%
+  mutate(good_rate = good / tot) %>%
+  select(feed,tot,good_rate)
+
+```
+
+
+## Communicate results
+
+The figure is derived from the `chickwgt` dataset. The dataset is the data of **an experiment was conducted to measure and compare the effectiveness of various feed supplements on the growth rate of chickens.** It consists of **71 observations on the following 2 variables: weight and feed.* The origin source of the data is from **Biometrika**. From the figure, we can see that different feeds produce very different kinds of chicken. It seems that feeding `casein` and `sunflower` can make the heaviest chicken while using horsebean can yield very different result. I set a threshold of 250 for determining a good feed. Using the information in the chart above, we can see that casein, meatmeal and sunflower seems to be good candidates for a good feed while others are not so ideal. In the future, I hope that I can yield more data points to test the hypothesis and we also want to have a recommender system for the farmers to choose the best type of feed based on their need.
+
+
+
+
+# 3. InsectSprays
+
+The third dataset I chose is `InsectSprays`.
+
+## Read data into R
+```{r}
+data(InsectSprays)
+```
+
+
+## Produce a figure
+
+We want to know what kind of spray is the most effective. So we create a single boxplot to explore the relationship:
+```{r}
+# Making a boxplot to compare different types of spray
+ggplot(InsectSprays, mapping = aes(x = spray, y = count)) +
+  geom_boxplot() + 
+  ggtitle("Comparison of the Effectiveness of different Types of Spray")
+```
+
+
+## Use functions to filter and summerize your dataset
+
+From the chart above, we can easily see that product C and D both have an outlier. We want to see the effect of removing the outlier:
+```{r}
+InsectSprays %>%
+  filter(spray == 'C') %>%
+  mutate(mean = mean(count))%>%
+  filter(count < quantile(count, 0.95)) %>% #Filter out the outlier (2 s.d)
+  mutate(meanAfter = mean(count)) %>%
+  select(mean,meanAfter) %>%
+  head(1)
+```
+
+```{r}
+InsectSprays %>%
+  filter(spray == 'D') %>%
+  mutate(mean = mean(count))%>%
+  filter(count < quantile(count, 0.95)) %>%
+  mutate(meanAfter = mean(count)) %>%
+  select(mean,meanAfter) %>%
+  head(1)
+```
+
+
+## Communicate results
+
+The figure is derived from the `InsectSprays` dataset. It is a data set that evaluate the effectiveness of insect sprays and it records the ** counts of insects in agricultural experimental units treated with different insecticides.** This is **a data frame with 72 observations on 2 variables.** The original source of this data is **Beall, G., (1942) The Transformation of data from entomological field experiments, Biometrika, 29, 243-262.** From the figure above, we can see that the effectiveness of the spray varies a lot. A, B and F are among the top performers as the counts of insect being treated are higher than the other three. They appear at a much higher level of effectiveness than the other three. There are two outliers identified with the plot for Spray C and Spray D. I did a little investigation by removing the outlier and recalculate the mean. We observe that the mean is much lower than before. So without the outlier, the spray performs even worse.
+
+We don't know why those outliers exists and they have a huge impact on the measurement. So the next step I will take is to investigate the reason behind the outlier and determine if there is any error or any miscellaneous sitation happening in the experiment.
+
+# 4. ToothGrowth
+
+The last dataset I chose is `ToothGrowth`.
+
+## Read data into R
+
+```{r}
+data(ToothGrowth)
+```
+
+## Produce a figure
+
+```{r}
+ggplot(ToothGrowth,aes(x = supp,y=len))+
+  geom_boxplot()+
+  facet_wrap(.~dose)+
+  ggtitle("Length of Odontoblasts versus Different Supplements")
+```
+
+## Use functions to filter and summerize your dataset
+```{r}
+options(digits = 3)
+# Calculate the mean of lenngths for each group
+meanTable = ToothGrowth %>%
+  group_by(supp,dose) %>%
+  summarise(mean = mean(len))
+
+meanTable %>%
+  group_by(supp) %>%
+  mutate(pct_change = (mean/lag(mean) - 1) * 100) %>%
+  mutate(pct_change = replace_na(pct_change,0))
+```
+
+## Communicate results
+
+The figure is derived from the dataset `ToothGrowth`. The response is the **length of odontoblasts in 60 guinea pigs. Each animal received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, orange juice or Vitamin C.** This dataset consists of ** 60 observations on 3 variables.** The original source is **C. I. Bliss (1952). The Statistics of Bioassay. Academic Press.** The figure shows that under different doses, orange juice seems like a better feed way to supplement the pigs when the dose is small. However, there is not a significant difference when the dose is high. So the data manipulation explores the relationship between supplement and doses. I calculated the percentage change of the mean teeth growth for doubling the dose for each supplement. Clearly, the effectiveness improves a lot if we double the dose from 0.5 to 1, but the percentage change between 1 dose and 2 doses is not that huge for orange juice but is still pretty significant for vitamin C. It seems that there is a bottleneck for orange juice to improve the teeth at 2 dose.
+
+In the future, I would like to get more data on this issue and explore the effect when adding more doses. I would also like to look at the individual difference of these pigs to better understand the scenario presented here.

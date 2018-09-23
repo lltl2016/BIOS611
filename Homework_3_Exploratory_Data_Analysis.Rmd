@@ -320,6 +320,9 @@ newdata = rename(newdata,one = `1`, two = `2`, three = `3`)
     (How can you simply generate a tibble of two vectors (1 2 3 ... 26, a b c ... z)?)
 
     Answer: It converts named vectors to a data frame with names and values
+```{r}
+enframe(letters)
+```
 
 
 # Exercise 7

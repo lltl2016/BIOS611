@@ -1,0 +1,42 @@
+---
+title: "Exercise2"
+author: "Lang Li"
+date: "September 24, 2018"
+output: html_document
+---
+```{r}
+library(tidyverse)
+WS = read_file('WS.txt')
+```
+
+Number of times the word "thee" is used?
+```{r}
+str_count(WS,"Thee") + str_count(WS,"\\bthee\\b")
+```
+
+Preceding Thee?
+```{r}
+string = str_extract_all(WS, "(?:[^\\s]+\\s){1}\\bthee\\b")
+```
+
+```{r}
+a = as.data.frame(table(string))
+a %>%
+  arrange(desc(Freq)) %>%
+  head(10)
+```
+
+2. Gene Sequence
+
+```{r}
+seq = read_file("sequence.txt")
+```
+
+```{r}
+info = str_extract_all(seq,"\\bprotein=([:alnum:]|[:space:])*")
+b = as.data.frame(table(info))
+b %>%
+  arrange(desc(Freq)) %>%
+  head(10)
+```
+

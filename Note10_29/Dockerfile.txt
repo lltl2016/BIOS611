@@ -1,0 +1,10 @@
+From rocker/tidyverse
+
+(RUN Statement)
+
+RUN Rscript -e "install.packages('gutenbergr')"
+
+RUN Rscript -e "install.packages('tidytext')"
+
+RUN  Rscript  hgwells_wordcounts.R
+ (run in docker container)

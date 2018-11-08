@@ -1,0 +1,538 @@
+---
+  title: "BIOS 611 HW6 Functions, vectors, and iteration (Chapter 19 - 21)"
+  author: "Lang Li"
+  date: "2018-10-11 20:05:30 EDT"
+  output: html_document
+---
+  (This homework is due Mon. Oct. 15th at 6 PM.)
+
+  This set of exercise is largely taken from R for Data Science by Garrett Grolemund and Hadley Wickham.
+```{r}
+library(tidyverse)
+library(nycflights13)
+```
+
+# Exercise 1
+
+
+1.  `dim()` function only works for objects such as matrix, array, or data frame. It returns `NULL` 
+    when you apply the function to a vector or a list.
+    Write a function called `dim2()` that returns dimension of an object, where the dimension is defined by 
+    `dim()` for matrices, arrays, and data frames, by `length()` for vectors and lists, and by `NULL` 
+    for all other classes.  
+    Hint: use `if () {} else {}` statement.
+    
+    Answer: 
+
+    ```{r}
+    dim2 <- function(x){
+      if (is.array(x) | is.matrix(x) | is.data.frame(x)){
+        return(dim(x))
+      } 
+      else if (is.vector(x) | is.list(x)){
+        return(length(x))
+      }else{
+        return(NULL)
+      }
+    }
+    ```
+
+
+2.  Write a function that returns the number of `.R` files of a specific folder (input: `path`). 
+    Hint: use `list.files()` and `grep()` (or `str_detect()`).  
+    (For those code chunks with `eval = FALSE` option, please leave the eval option as it is, 
+     because the output will not be reproducible.)
+    
+    Answer: 
+
+    ```{r, eval = FALSE}
+    count_R_file = function(path){
+      return(length(list.files(path = path,pattern = "\\.R$"))
+    }
+    ```
+
+
+3.  The following function was designed to convert the existing count data to a compositional data.  
+    (i.e. each column is divided by its column sum.)
+    The code has several problems. Criticize the code and provide a solution.
+
+    ```{r}
+    notGood <- function(mat, margin) {
+      tmp <- apply(mat, 2, sum)
+      mat <- mat / tmp
+    }
+    
+    # example data
+    set.seed(1)
+    dat <- matrix(rpois(100, rep(1:10, each = 10)), 10)
+    ```
+
+    Answer: 1. It does not return anything..
+            2. Margin is unused
+            3. I think the margin is always 2. So no need of a margin input.
+            4. mat/tmp actually compute the result of each row divided by the column sum. We have to somehow use some transpose to work it out. See the answer below.
+    ```{r}
+    Good <- function(mat) {
+      tmp <- apply(mat,2, sum)
+      mat <- t(t(mat) / tmp)
+      return(mat)
+    }
+    ```
+
+
+
+# Exercise 2
+
+1.  What's the difference between `if` and `ifelse()`? Carefully read the help
+    and construct three examples that illustrate the key differences.
+    Keywords: type of outputs, `NA`, output for `FALSE`
+    
+    Answer:  If test a single element or one condition but ifelse can test a bunch. If will output TRUE/FALSE but ifelse will execute the condition you specified directly, 
+
+
+
+2.  How could you use `cut()` to simplify this set of nested if-else statements?
+
+    ```{r, eval = FALSE}
+    if (temp <= 0) {
+      "freezing"
+    } else if (temp <= 10) {
+      "cold"
+    } else if (temp <= 20) {
+      "cool"
+    } else if (temp <= 30) {
+      "warm"
+    } else {
+      "hot"
+    }
+    ```
+    
+    How would you change the call to `cut()` if I'd used `<` instead of `<=`?
+    What is the other chief advantage of `cut()` for this problem? (Hint:
+    what happens if you have many values in `temp`?)
+
+    Answer: See below: The right = TRUE/FALSE control the < or <=. If I have many value in temp, it will be very easy to use cut instead of multiple if statements.
+
+    ```{r,eval = FALSE}
+cut(temp, c(-Inf, 0, 10, 20, 30, Inf), right = FALSE,
+    labels = c("freezing", "cold", "cool", "warm", "hot"))
+    ```
+
+
+3.  What does this `switch()` call do? What happens if `x` is "e"?
+
+    ```{r, eval = FALSE}
+    
+    switch(x, 
+      a = ,
+      b = "ab",
+      c = ,
+      d = "cd"
+    )
+    ```
+    
+    Experiment, then carefully read the documentation. 
+
+    Answer: 
+
+    ```{r}
+    test_switch = function(x){
+switch (x,
+      a = ,
+      b = "ab",
+      c = ,
+      d = "cd"
+)}
+    
+    test_switch('e')
+    ```
+
+It will return 'ab' for input 'a' and 'b', 'cd' for input c or d but will return nothing of anything else.
+
+# Exercise 3
+
+1.  What does `commas(letters, collapse = "-")` do? Why?
+
+    Answer: I looked into the textbook and found the below definition:
+
+    ```{r}
+commas <- function(...) {
+  stringr::str_c(..., collapse = ", ")
+}
+    ```
+
+So if you do `collapse = '-'`, it will gives you an error. Simply because you have defined the collapse ','. You cannot give the same parameter twice to an argument. There will be a conflict.
+
+2.  The default value for the `method` argument to `cor()` is 
+    `c("pearson", "kendall", "spearman")`. What does that mean? What 
+    value is used by default?
+
+    Answer: It means you can use the three methods given as your input for method argument. The first one, `"pearson"` is the default.
+
+
+
+# Exercise 4
+
+1.  Describe the difference between `is.finite(x)` and  `!is.infinite(x)`.
+
+    Answer: 
+
+    ```{r}
+    
+test <- c(NA, NaN, Inf, -Inf)
+is.finite(test)
+!is.infinite(test)
+```
+
+We test several important value in R. We found that R consider all of them not finite. NA and NAN is also not infinite since they are either not exist or not a number but two types of infinite is still infinite by the definition of R.
+
+2.  Create functions that take a vector as input and returns:
+    
+    1. The last value.  Should you use `[` or `[[`?
+
+    Answer: `[[]]`
+
+    ```{r}
+last.value <- function(x){
+  if(length(x)>0){
+    x[[length(x)]]
+  }else{
+    x
+  }
+}
+    ```
+
+    1. The elements at even numbered positions.
+    
+    Answer: 
+
+    ```{r}
+even.number <- function(x) {
+  if (length(x)>0) {
+    x[x %% 2 == 0]
+  } else {
+    x
+  }  
+}
+    ```
+
+    1. Every element except the last value.
+    
+    Answer: 
+
+    ```{r}
+no.last.value <- function(x){
+  if(length(x)>0){
+    x[-length(x)]
+  }else{
+    x
+  }
+}
+    ```
+
+
+
+3.  What happens when you subset with a positive integer that's bigger
+    than the length of the vector? What happens when you subset with a 
+    name that doesn't exist?
+
+    Answer: Those indexes that are larger than the length or not exists in the vector will return `NA`. 
+
+    ```{r}
+
+    ```
+
+
+# Exercise 5
+
+1.  Describe the difference between `abc[[1]]` and `abc[["1"]]`.  
+    Hint: You can use `abc <- list("2"=1:3, "1"=4:6)`
+
+    Answer: `abc[[1]]` will return the first element inthe list while `abc[["1"]]` will return the element named "1".
+
+    ```{r}
+abc <- list("2"=1:3, "1"=4:6)
+    abc[[1]]
+    abc[["1"]]
+    ```
+
+
+2.  What does `hms::hms(3600)` return? How does it print? What primitive
+    type is the augmented vector built on top of? What attributes does it 
+    use?
+    
+    Answer: IT will return 01:00:00.  returns an object of class, and prints the time in "%H:%M:%S" format. The primitive type is a double. The attributes are `class` and `units`.
+
+    ```{r}
+library(hms)
+time = hms::hms(3600)
+time
+typeof(time)
+attributes(time)
+    ```
+
+3.  Try and make a tibble that has columns with different lengths. What
+    happens?
+
+    Answer: If your x is 1 and y is 1:10, then the tibble will give ten 1s. However, you cannot do other length of x, say length(x) = 2 and length(y) = 10. See below examples
+
+    ```{r}
+tibble(1,1:10)
+    ```
+
+```{r,eval=FALSE}
+tibble(1:3,1:10) #Error: Column `1:3` must be length 1 or 10, not 3
+```
+
+
+4.  Based on the definition above, is it ok to have a list as a
+    column of a tibble? Provide an example, if yes.
+    Answer: Yes! See below.
+
+    ```{r}
+tibble(1:6,list(1:3))
+    ```
+
+
+
+# Exercise 6
+
+1.  Write for loops to:
+
+
+    1. Compute the mean of every column in `mtcars`.
+    Answer: 
+
+    ```{r}
+for (i in 1:ncol(mtcars)){
+  print(mean(mtcars[,i]))
+}
+    ```
+
+    1. Determine the type of each column in `nycflights13::flights`.
+    Answer: 
+
+    ```{r}
+for (i in 1:ncol(flights)){
+  print(class(flights[[i]]))
+}
+    ```
+
+    1. Compute the number of unique values in each column of `iris`.
+    Answer: 
+
+    ```{r}
+for (i in 1:ncol(iris)){
+  print(length(unique(iris[[i]])))
+}
+    ```
+
+    1. Generate 10 random normals for each of $\mu = -10$, $0$, $10$, and $100$.
+    
+    Think about the output, sequence, and body __before__ you start writing
+    the loop.
+
+    Answer: 
+
+    ```{r}
+# values of the mean
+mu <- c(-10, 0, 10, 100)
+for (i in 1:length(mu)) {
+  print(rnorm(10, mean = mu[i]))
+}
+```
+
+2.  Eliminate the for loop in each of the following examples by taking 
+    advantage of an existing function that works with vectors:
+    (Do not use `apply`, `lapply`, `do.call` kind of functions, but try to use very basic functions)
+    
+    ```{r, eval = FALSE}
+    # a.
+    out <- ""
+    for (x in letters) {
+      out <- stringr::str_c(out, x)
+    }
+    out
+    # b.
+    x <- sample(100)
+    sd <- 0
+    for (i in seq_along(x)) {
+      sd <- sd + (x[i] - mean(x)) ^ 2
+    }
+    sd <- sqrt(sd / (length(x) - 1))
+    sd
+    # c.
+    x <- runif(100)
+    out <- vector("numeric", length(x))
+    out[1] <- x[1]
+    for (i in 2:length(x)) {
+      out[i] <- out[i - 1] + x[i]
+    }
+    all.equal(cumsum(x),out)
+    ```
+
+    Answer: 
+
+    ```{r, eval= FALSE}
+    # a.
+    str_c(letters, collapse = "")
+    # b.
+    sd(x)
+    # c.
+    cumsum(x)
+    ```
+
+
+3.  It's common to see for loops that don't preallocate the output and instead
+    increase the length of a vector at each step:
+    
+    ```{r, eval = FALSE}
+    
+    add_to_vec <- function(n) {
+      output <- vector("integer", 0)
+    for (i in 1:n) {
+      output <- c(output, i)
+    }
+      output
+  }
+    
+    ptm <- proc.time()
+    hello = add_to_vec(100000)
+    proc.time()-ptm
+    ```
+    
+    How does this affect performance? Design and execute an experiment.
+
+    Answer: As we can see from the below and above, when we add 100000 numbers into the pre-allocated vectors, it is way faster...
+
+    ```{r}
+
+    add_to_vec <- function(n) {
+      output <- vector("integer", n)
+      for (i in seq_along(n)) {
+         output[i] = i
+    }
+  }
+    ptm <- proc.time()
+    hello = add_to_vec(100000)
+    proc.time()-ptm
+    ```
+
+# Exercise 7
+
+1.  Imagine you have a directory full of CSV files that you want to read in.
+    You have their paths in a vector, 
+    `files <- dir("data/", pattern = "\\.csv$", full.names = TRUE)`, and now
+    want to read each one with `read_csv()`. Write the for loop that will 
+    load them into a single data frame. 
+    (For those code chunks with `eval = FALSE` option, please leave the eval option as it is, 
+     because the output will not be reproducible.)
+    
+    Answer: 
+
+    ```{r, eval = FALSE}
+df <- vector("list", length(files))
+for (i in 1:length(files)) {
+  df[[i]] <- read_csv(files[[i]])
+}
+    ```
+
+
+2.  Write a function that prints the mean of each numeric column in a data 
+    frame, along with its name. For example, `show_mean(iris)` would print:
+    
+    ```{r, eval = FALSE}
+    options(digit = 3)
+    show_mean<- function(df, digits = 2) {
+      for (i in 1:length(names(df))){
+        if (is.numeric(df[[i]])){
+          cat(names(df)[i], ":" ,mean(df[[i]]),"\n")
+        }
+      }
+    }
+    show_mean(iris)
+    #> Sepal.Length: 5.84
+    #> Sepal.Width:  3.06
+    #> Petal.Length: 3.76
+    #> Petal.Width:  1.20
+    ```
+    
+    (Extra challenge: what function did I use to make sure that the numbers
+    lined up nicely, even though the variable names had different lengths?)
+
+    Answer: No idea. Something in str_C?
+
+    ```{r}
+
+    ```
+
+3.  What does this code do? How does it work?
+
+    ```{r, eval = FALSE}
+    trans <- list( 
+      disp = function(x) x * 0.0163871,
+      am = function(x) {
+        factor(x, labels = c("auto", "manual"))
+      }
+    )
+    for (var in names(trans)) {
+      mtcars[[var]] <- trans[[var]](mtcars[[var]])
+    }
+    ```
+
+    Answer: This code mutate thedisp which becomes 0.0163871 of the original variabe and change the factor of `am` into `auto` or `manual`. This is being done using for loop.
+
+
+# Exercise 8
+
+1.  Write code that uses one of the `map` functions to:
+
+    1. Compute the mean of every column in `mtcars`.
+    Answer: 
+
+    ```{r}
+map_dbl(mtcars,mean)
+    ```
+
+    1. Determine the type of each column in `nycflights13::flights`.
+    Answer: 
+
+    ```{r}
+map_chr(flights,typeof)
+    ```
+
+    1. Compute the number of unique values in each column of `iris`.
+    Answer: 
+
+    ```{r}
+map_int(iris, function(x) length(unique(x)))
+    ```
+
+    1. Generate 10 random normals for each of $\mu = -10$, $0$, $10$, and $100$.
+
+    Answer: 
+
+    ```{r}
+map(c(-10, 0, 10, 100), ~ rnorm(n = 10, mean = .))
+    ```
+
+2.  What happens when you use the map functions on vectors that aren't lists?
+    What does `map(1:5, runif)` do? Why?
+    
+    Answer: 
+
+    ```{r}
+map(1:5, runif)
+    ```
+
+Interesting. The map functions will apply the function to each element of the vector. So this will produce `runif(1)`, `runif(2)`, `runif(3)`, `runif(4)`, and `runif(5)`. 
+
+3.  Rewrite `map(x, function(df) lm(mpg ~ wt, data = df))` to eliminate the 
+    anonymous function. 
+
+    Answer: 
+
+
+    ```{r}
+map(list(mtcars), ~ lm(mpg ~ wt, data = .))
+    ```

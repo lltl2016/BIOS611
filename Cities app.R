@@ -20,8 +20,7 @@ ui <- fluidPage(
                    label = "Number of bins:",
                    min = 1,
                    max = 50,
-                   value = 30
-                  )
+                   value = 30)
     ),
     
     # Main panel for displaying outputs ----
@@ -35,11 +34,11 @@ ui <- fluidPage(
   )
 )
 
-
+# Define server logic required to draw a histogram ----
 server <- function(input, output) {
   
   # renderPlot creates histogram and links to ui
-  output$popPlot <- renderPlot({{
+  output$popPlot <- renderPlot({
     bins = seq(min(city_df$population, na.rm = T), 
                max(city_df$population, na.rm = T), 
                length.out = input$bins + 1)
